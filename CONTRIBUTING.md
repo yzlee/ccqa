@@ -124,24 +124,44 @@ lightweight option (`brew install asciinema`).
 
 ## Releasing
 
-`@ccqa/cli` is the only published package. Release flow:
+`@ccqa/cli` is the only published package.
 
-1. Bump the version in `cli/package.json` (and ideally `package.json`,
-   `shared/package.json`, `server/package.json`, `web/package.json` so
-   git history matches).
+### One-time setup
+
+CCQA publishes via **npm Trusted Publishing** (OIDC) — no long-lived
+`NPM_TOKEN` lives in the repo. To enable it the first time:
+
+1. Manually publish v0.1.0 from your laptop so the package exists:
+   ```bash
+   npm login           # 2FA prompt is fine, this is a one-shot
+   npm --workspace cli run build
+   cd cli && npm publish --access public
+   ```
+2. Go to https://www.npmjs.com → the `@ccqa/cli` package page →
+   **Settings** → **Trusted Publisher** → **Add**.
+3. Pick "GitHub Actions" and fill in:
+   - Organization or user: `yzlee`
+   - Repository: `ccqa`
+   - Workflow filename: `release.yml`
+   - Environment: leave blank (unless you add a GH Environment)
+4. Save. From now on the workflow can publish without any secret.
+
+### Subsequent releases
+
+1. Bump the version in `cli/package.json` (and the sibling
+   `package.json`, `shared/package.json`, `server/package.json`,
+   `web/package.json` so git history is internally consistent).
 2. Commit: `git commit -am "release v0.1.1"`
 3. Tag: `git tag v0.1.1 && git push --follow-tags`
 4. The [release workflow](.github/workflows/release.yml) verifies the
    tag matches `cli/package.json`'s version, runs typecheck + build,
-   then `npm publish --provenance --access public`. It also opens a
-   GitHub Release with auto-generated notes.
+   then `npm publish --provenance --access public` via OIDC. It also
+   opens a GitHub Release with auto-generated notes.
 
-The workflow needs an `NPM_TOKEN` secret on the repo (Settings →
-Secrets → Actions → "New repository secret"). Generate one at
-<https://www.npmjs.com/settings/~/tokens> with **Automation** type so
-it bypasses 2FA. Provenance is opt-in but recommended.
+### Manual fallback
 
-To publish manually instead:
+If Trusted Publishing isn't configured yet (or you need to publish
+from a laptop):
 
 ```bash
 npm --workspace cli run build

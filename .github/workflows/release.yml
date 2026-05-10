@@ -42,11 +42,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Uses npm Trusted Publishing (OIDC) — no NPM_TOKEN needed.
+      # The package's "Trusted Publisher" must be configured on
+      # npmjs.com to point at this repo + workflow first. See
+      # https://docs.npmjs.com/trusted-publishers for setup.
       - name: Publish to npm
         working-directory: cli
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
