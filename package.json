@@ -1,0 +1,42 @@
+{
+  "name": "ccqa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "LLM-driven QA harness that drives Claude Code / Codex / Kimi to test git projects from a natural-language flow.",
+  "license": "MIT",
+  "author": "yzlee",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "qa",
+    "testing",
+    "agent",
+    "llm",
+    "automation"
+  ],
+  "workspaces": [
+    "server",
+    "web",
+    "cli",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm-run-all --parallel dev:server dev:web",
+    "dev:server": "npm --workspace server run dev",
+    "dev:web": "npm --workspace web run dev",
+    "build": "npm --workspace shared run build && npm --workspace server run build && npm --workspace web run build && npm --workspace cli run build",
+    "typecheck": "npm-run-all --parallel typecheck:*",
+    "typecheck:shared": "tsc -p shared/tsconfig.json --noEmit",
+    "typecheck:server": "tsc -p server/tsconfig.json --noEmit",
+    "typecheck:web": "tsc -p web/tsconfig.json --noEmit",
+    "typecheck:cli": "tsc -p cli/tsconfig.json --noEmit",
+    "cli": "npm --workspace cli run start --"
+  },
+  "devDependencies": {
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,19 @@
+node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.local
+data/projects/*
+data/runs/*
+data/db/*
+!data/projects/.gitkeep
+!data/runs/.gitkeep
+!data/db/.gitkeep
+.vite
+coverage
+
+# Per-developer Claude Code settings (auto-allow rules etc).
+# The shared, repo-wide .claude/settings.json is fine to commit;
+# .local.json is per-machine state and should not be.
+.claude/settings.local.json
