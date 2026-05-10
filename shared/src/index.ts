@@ -32,12 +32,23 @@ export type NodeKind =
   | "parallel";
 
 export interface Repo {
+  /**
+   * Either a clonable URL (when `kind === "git"`) or a filesystem path
+   * to an existing checkout on this machine (when `kind === "local"`).
+   * Convenience: `kind` may be omitted on input — we infer "local" if
+   * the value starts with /, ./, ~/ or file://, "git" otherwise.
+   */
   url: string;
-  /** Optional ref/branch/tag/commit. */
+  kind?: "git" | "local";
+  /** Optional ref/branch/tag/commit. Ignored for local paths. */
   ref?: string;
-  /** Where it was cloned to inside data/projects/<projectId>/repos/<name> */
+  /**
+   * Where the agent will read code from. For git repos, the shallow
+   * clone target under data/projects/<projectId>/repos/<name>. For
+   * local repos, the user-provided path itself (no copy).
+   */
   localPath?: string;
-  /** Last clone status: "ok" | "error" | "pending" */
+  /** Last setup status: "ok" | "error" | "pending" */
   status?: string;
   error?: string;
 }

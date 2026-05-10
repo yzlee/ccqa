@@ -30,6 +30,7 @@ import { getCoder } from "../coders/index.js";
 import { askJson, ask } from "../llm/anthropic.js";
 import { judgeStep } from "./judge.js";
 import { writeReport } from "./report.js";
+import { summarizePastRuns } from "./history.js";
 import { publish } from "../services/eventBus.js";
 
 const activeRuns = new Map<string, AbortController>();
@@ -94,6 +95,10 @@ export async function executeRun(runId: string): Promise<void> {
     // Walk linear-by-default, branch decisions deferred to the LLM.
     const order = topoOrder(flow);
     const cwd = projectCwd(project);
+    const history = summarizePastRuns(project.id, runId);
+    if (history.hasHistory) {
+      emit("run.history_loaded", { summary: history.text });
+    }
 
     let blockingBug = false;
     for (const node of order) {
@@ -148,7 +153,9 @@ export async function executeRun(runId: string): Promise<void> {
           {
             cwd,
             prompt: buildStepPrompt(project, flow, node),
-            appendSystemPrompt: buildSystemPreamble(project, flow),
+            appendSystemPrompt:
+              buildSystemPreamble(project, flow) +
+              (history.hasHistory ? "\n\n" + history.text : ""),
             signal: ac.signal,
             maxTurns: 60,
           },

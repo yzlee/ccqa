@@ -155,7 +155,14 @@ project
 project
   .command("new")
   .requiredOption("--name <name>", "project name")
-  .option("--repo <url...>", "git repo URLs (optional `<url>#<ref>`)")
+  .option(
+    "--repo <url...>",
+    "git repo URLs (optional `<url>#<ref>`); use --path for local dirs"
+  )
+  .option(
+    "--path <dir...>",
+    "local directories to test against (no clone)"
+  )
   .option(
     "--coder <kind>",
     "coder kind: claude-code | codex | kimi",
@@ -165,10 +172,17 @@ project
   .option("--flow-file <path>", "read main flow text from a file")
   .option("--notes <text>", "free-form project notes")
   .action(async (opts) => {
-    const repos = (opts.repo ?? []).map((line: string) => {
+    const gitRepos = (opts.repo ?? []).map((line: string) => {
       const [url, ref] = line.split("#");
-      return ref ? { url, ref } : { url };
+      return ref
+        ? { url, ref, kind: "git" as const }
+        : { url, kind: "git" as const };
     });
+    const localRepos = (opts.path ?? []).map((p: string) => ({
+      url: p,
+      kind: "local" as const,
+    }));
+    const repos = [...gitRepos, ...localRepos];
     const mainFlowText = opts.flowFile
       ? fs.readFileSync(opts.flowFile, "utf8")
       : opts.flow;

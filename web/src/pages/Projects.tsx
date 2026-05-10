@@ -12,6 +12,7 @@ export function ProjectsPage() {
 
   const [name, setName] = useState("");
   const [reposText, setReposText] = useState("");
+  const [pathsText, setPathsText] = useState("");
   const [coder, setCoder] = useState<"claude-code" | "codex" | "kimi">(
     "claude-code"
   );
@@ -19,24 +20,34 @@ export function ProjectsPage() {
   const [notes, setNotes] = useState("");
 
   const create = useMutation({
-    mutationFn: () =>
-      api.createProject({
+    mutationFn: () => {
+      const gitRepos = reposText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((line) => {
+          const [url, ref] = line.split(/\s+/);
+          return ref
+            ? { url, ref, kind: "git" as const }
+            : { url, kind: "git" as const };
+        });
+      const localRepos = pathsText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((p) => ({ url: p, kind: "local" as const }));
+      return api.createProject({
         name,
         coder,
         mainFlowText,
         notes,
-        repos: reposText
-          .split("\n")
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .map((line) => {
-            const [url, ref] = line.split(/\s+/);
-            return ref ? { url, ref } : { url };
-          }),
-      }),
+        repos: [...gitRepos, ...localRepos],
+      });
+    },
     onSuccess: () => {
       setName("");
       setReposText("");
+      setPathsText("");
       setMainFlowText("");
       setNotes("");
       qc.invalidateQueries({ queryKey: ["projects"] });
@@ -89,13 +100,22 @@ export function ProjectsPage() {
                 placeholder="my-product / e2e-flow"
               />
             </Field>
-            <Field label="Repos (one per line, optional `<url> <ref>`)">
+            <Field label="Git repos (one per line, optional `<url> <ref>`)">
               <textarea
                 value={reposText}
                 onChange={(e) => setReposText(e.target.value)}
-                className="input h-24 font-mono text-xs"
+                className="input h-20 font-mono text-xs"
                 placeholder="https://github.com/owner/repo
 https://github.com/owner/other main"
+              />
+            </Field>
+            <Field label="Local folders (one path per line, no clone)">
+              <textarea
+                value={pathsText}
+                onChange={(e) => setPathsText(e.target.value)}
+                className="input h-20 font-mono text-xs"
+                placeholder="/Users/me/code/my-project
+~/work/another-checkout"
               />
             </Field>
             <Field label="Coder">

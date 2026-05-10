@@ -1,7 +1,7 @@
 {
   "name": "@ccqa/cli",
-  "version": "0.1.0",
-  "description": "LLM-driven QA harness — drives Claude Code / Codex / Kimi to test git projects from a natural-language flow. Includes the embedded server and bundled web UI.",
+  "version": "0.1.1",
+  "description": "LLM-driven QA harness \u2014 drives Claude Code / Codex / Kimi to test git projects from a natural-language flow. Includes the embedded server and bundled web UI.",
   "license": "MIT",
   "author": "yzlee",
   "homepage": "https://github.com/yzlee/ccqa#readme",

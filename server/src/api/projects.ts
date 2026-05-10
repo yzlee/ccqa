@@ -8,7 +8,15 @@ import { config } from "../config.js";
 const createSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  repos: z.array(z.object({ url: z.string().min(1), ref: z.string().optional() })).default([]),
+  repos: z
+    .array(
+      z.object({
+        url: z.string().min(1),
+        ref: z.string().optional(),
+        kind: z.enum(["git", "local"]).optional(),
+      })
+    )
+    .default([]),
   coder: z.enum(["claude-code", "codex", "kimi"]).optional(),
   mainFlowText: z.string().optional(),
   env: z.record(z.string()).optional(),
