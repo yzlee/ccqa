@@ -122,6 +122,32 @@ vhs demo.tape    # outputs demo.gif
 For terminal recordings, [`asciinema`](https://asciinema.org) is the
 lightweight option (`brew install asciinema`).
 
+## Releasing
+
+`@ccqa/cli` is the only published package. Release flow:
+
+1. Bump the version in `cli/package.json` (and ideally `package.json`,
+   `shared/package.json`, `server/package.json`, `web/package.json` so
+   git history matches).
+2. Commit: `git commit -am "release v0.1.1"`
+3. Tag: `git tag v0.1.1 && git push --follow-tags`
+4. The [release workflow](.github/workflows/release.yml) verifies the
+   tag matches `cli/package.json`'s version, runs typecheck + build,
+   then `npm publish --provenance --access public`. It also opens a
+   GitHub Release with auto-generated notes.
+
+The workflow needs an `NPM_TOKEN` secret on the repo (Settings →
+Secrets → Actions → "New repository secret"). Generate one at
+<https://www.npmjs.com/settings/~/tokens> with **Automation** type so
+it bypasses 2FA. Provenance is opt-in but recommended.
+
+To publish manually instead:
+
+```bash
+npm --workspace cli run build
+cd cli && npm publish --access public
+```
+
 ## Filing bugs
 
 Useful info to include:

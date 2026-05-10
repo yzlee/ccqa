@@ -1,8 +1,11 @@
 # CCQA — LLM-driven QA harness
 
+[![npm version](https://img.shields.io/npm/v/@ccqa/cli.svg)](https://www.npmjs.com/package/@ccqa/cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Node ≥20](https://img.shields.io/badge/node-%E2%89%A520-339933)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-orange)
+
+English · [中文](README.zh-CN.md)
 
 A standalone tool that drives **Claude Code** / **Codex** / Kimi to test
 your projects from a natural-language description, the way you'd hand
@@ -58,11 +61,29 @@ or commit code.
 - Optional: `codex` CLI signed in if you want the Codex coder
 - An `ANTHROPIC_API_KEY` for the small "supervisor" calls (flow generation, judge, report writer)
 
-## Setup
+## Quickstart (installed)
+
+The published package is `@ccqa/cli`. One global install gives you the
+`ccqa` command, an embedded server, and the bundled web UI:
 
 ```bash
+npm install -g @ccqa/cli
+ccqa serve              # starts http://127.0.0.1:4317 + opens browser
+# in another terminal, or via the same UI:
+ccqa project new --name demo --repo https://github.com/owner/repo --flow-file flow.txt
+ccqa run start <projectId>
+```
+
+Data (SQLite, cloned repos, run transcripts) lives under `./.ccqa/` in
+the directory you ran `ccqa serve` from. Override with `CCQA_DATA_DIR`.
+
+## Setup (from source)
+
+```bash
+git clone https://github.com/yzlee/ccqa
+cd ccqa
 npm install
-cp .env.example .env  # then fill in ANTHROPIC_API_KEY
+cp .env.example .env  # then fill in ANTHROPIC_API_KEY (optional)
 ```
 
 Minimum env (`.env` in repo root):

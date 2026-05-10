@@ -2,6 +2,7 @@ node_modules
 dist
 .DS_Store
 *.log
+*.tsbuildinfo
 .env
 .env.local
 data/projects/*
@@ -17,3 +18,8 @@ coverage
 # The shared, repo-wide .claude/settings.json is fine to commit;
 # .local.json is per-machine state and should not be.
 .claude/settings.local.json
+
+# Synced into cli/ at build time so they ship in the npm tarball;
+# the real copies live at the repo root.
+cli/README.md
+cli/LICENSE

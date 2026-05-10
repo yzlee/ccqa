@@ -1,11 +1,22 @@
 #!/usr/bin/env node
 /**
- * Thin CLI on top of the CCQA HTTP API. Default base URL points at the
- * locally-running server. Use CCQA_BASE to override.
+ * The `ccqa` CLI.
+ *
+ * Two roles depending on the subcommand:
+ *
+ * 1. **`ccqa serve`** — boots an embedded server (fastify + sqlite +
+ *    websockets) that also serves the bundled web UI. This is the
+ *    one-command path for end users installing via `npm i -g @ccqa/cli`.
+ *
+ * 2. **all other commands** — thin HTTP/WebSocket client against a
+ *    running CCQA server (defaults to http://127.0.0.1:4317; override
+ *    with `CCQA_BASE` or `--base`).
  */
 import { Command } from "commander";
 import kleur from "kleur";
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import readline from "node:readline";
 import type {
   Bug,
@@ -18,6 +29,26 @@ import type {
 } from "@ccqa/shared";
 
 const base = process.env.CCQA_BASE ?? "http://127.0.0.1:4317";
+
+/**
+ * Locate the bundled web/ directory. When the CLI is published, the
+ * web build sits next to the bundled cli at `<cli>/dist/web`. In a
+ * fresh local checkout (running via tsx) it sits at
+ * `<repo>/web/dist`. We try both.
+ */
+function findWebDist(): string | undefined {
+  const here = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(here, "web"),         // bundled: dist/web next to dist/index.js
+    path.resolve(here, "..", "web"),   // bundled alt
+    path.resolve(here, "..", "..", "web", "dist"), // workspace dev
+    path.resolve(here, "..", "..", "..", "web", "dist"), // workspace dev (deeper)
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(path.join(c, "index.html"))) return c;
+  }
+  return undefined;
+}
 
 async function http<T>(method: string, path: string, body?: unknown): Promise<T> {
   const r = await fetch(`${base}${path}`, {
@@ -46,6 +77,56 @@ program
     const r = await http<any>("GET", "/api/health");
     console.log(JSON.stringify(r, null, 2));
   });
+
+program
+  .command("serve")
+  .description("start the embedded server (with bundled web UI)")
+  .option("--port <n>", "port to listen on", String(4317))
+  .option("--host <h>", "host to bind", "127.0.0.1")
+  .option("--no-open", "don't try to open the browser")
+  .option(
+    "--web-dist <path>",
+    "override the web build directory (defaults to the bundled one)"
+  )
+  .action(async (opts) => {
+    // Imported lazily so the (much smaller) client-only commands don't
+    // pay the cost of loading fastify / better-sqlite3 / etc.
+    const { startServer } = await import("@ccqa/server");
+    const webDist = opts.webDist ?? findWebDist();
+    if (!webDist) {
+      console.warn(
+        kleur.yellow(
+          "warning: could not locate bundled web; UI will be unavailable. " +
+            "Use --web-dist to point at a built web/ dist."
+        )
+      );
+    }
+    await startServer({
+      port: Number(opts.port),
+      host: opts.host,
+      webDist,
+    });
+    const url = `http://${opts.host}:${opts.port}`;
+    console.log(kleur.green("CCQA running at"), kleur.cyan(url));
+    if (opts.open !== false && webDist) {
+      void openInBrowser(url);
+    }
+  });
+
+async function openInBrowser(url: string): Promise<void> {
+  const { spawn } = await import("node:child_process");
+  const cmd =
+    process.platform === "darwin"
+      ? "open"
+      : process.platform === "win32"
+      ? "explorer"
+      : "xdg-open";
+  try {
+    spawn(cmd, [url], { stdio: "ignore", detached: true }).unref();
+  } catch {
+    // Best-effort; never crash the CLI on a browser-launch failure.
+  }
+}
 
 const project = program.command("project").description("manage projects");
 
