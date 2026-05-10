@@ -44,17 +44,20 @@ export function FlowDesignerPage() {
   const flow = flowQ.data;
   const proj = projectQ.data;
 
-  if (!flow || !proj)
-    return <div className="p-6 text-zinc-400">Loading flow…</div>;
-
+  // NOTE: every hook MUST be called before the early-return below, or
+  // React throws "Rendered more hooks than during the previous render"
+  // when the queries flip from pending to resolved.
   const selectedNode = useMemo<FlowNode | null>(() => {
-    if (!selected) return null;
+    if (!selected || !flow) return null;
     return (
       flow.nodes.find((n) => n.id === selected) ??
       flow.sideItems.find((s) => s.id === selected) ??
       null
     );
   }, [selected, flow]);
+
+  if (!flow || !proj)
+    return <div className="p-6 text-zinc-400">Loading flow…</div>;
 
   return (
     <div className="h-[calc(100vh-49px)] grid grid-cols-12">

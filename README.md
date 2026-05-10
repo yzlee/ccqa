@@ -21,6 +21,20 @@ or commit code.
 > No automated test suite yet. Expect rough edges — see
 > [issues](../../issues) and PRs welcome.
 
+## Screenshots
+
+**1. Project setup** — paste git repos, pick a coder, write the test flow in plain language.
+
+![Projects page](docs/screenshot-projects.png)
+
+**2. Flow designer** — the LLM turns your description into a structured flow. Drag nodes, edit them inline, or chat with the flow ("split step 2 into two steps", "add a config note about ANTHROPIC_API_KEY"). Off-flow notes/configs live in the side list.
+
+![Flow designer](docs/screenshot-flow.png)
+
+**3. Live run** — each node lights up as the coder agent works on it. The right panel streams agent text / tool calls / judge verdicts in real time, and the markdown report appears at the end.
+
+![Run live view](docs/screenshot-run.png)
+
 > Per the design directive: **wherever an LLM can decide, an LLM
 > decides.** Step success, bug severity, blocking-vs-not, branch
 > selection, flow generation, flow edits, report writing — none of it

@@ -92,6 +92,36 @@ under `server/src/flow/`. When tweaking prompts:
 - Don't bake schemas the LLM "must" follow — keep validation defensive
   on our side.
 
+## Recording a demo
+
+The screenshots in `docs/` were captured with Chrome headless against
+the running dev server:
+
+```bash
+# In one terminal:
+npm run dev:server
+# In another:
+npm run dev:web
+# In a third (assumes a project + run already exist):
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless=new --disable-gpu --hide-scrollbars \
+  --window-size=1600,1000 --virtual-time-budget=10000 \
+  --screenshot=docs/screenshot-flow.png \
+  "http://127.0.0.1:4318/projects/<PROJECT_ID>/flow"
+```
+
+Demo GIFs are not checked in. If you want one, the easiest path is
+[`vhs`](https://github.com/charmbracelet/vhs):
+
+```bash
+brew install vhs
+# Write a .tape script that drives the CLI, then:
+vhs demo.tape    # outputs demo.gif
+```
+
+For terminal recordings, [`asciinema`](https://asciinema.org) is the
+lightweight option (`brew install asciinema`).
+
 ## Filing bugs
 
 Useful info to include:

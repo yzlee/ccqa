@@ -5,6 +5,14 @@
   "description": "LLM-driven QA harness that drives Claude Code / Codex / Kimi to test git projects from a natural-language flow.",
   "license": "MIT",
   "author": "yzlee",
+  "homepage": "https://github.com/yzlee/ccqa#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yzlee/ccqa.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yzlee/ccqa/issues"
+  },
   "keywords": [
     "claude-code",
     "codex",
