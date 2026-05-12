@@ -21,11 +21,35 @@ export function projectRepoDir(projectId: string): string {
   return path.join(config.projectsDir, projectId, "repos");
 }
 
+/**
+ * Pick a directory name for a clone target.
+ *
+ * For git URLs we use `<owner>__<repo>` (e.g. `cli__cli`) — using only
+ * the trailing path component caused collisions when a project pulled
+ * multiple repos with the same name (e.g. `github.com/a/foo` and
+ * `github.com/b/foo` both → `foo`, second silently overwriting).
+ *
+ * For local paths and unparseable URLs we fall back to the basename.
+ */
 function deriveName(input: string): string {
-  // For git URLs use the trailing path component, for local paths use
-  // the basename. Sanitize so it's a safe directory name.
-  const tail = input.replace(/[\/\\]+$/, "").split(/[\/\\]/).pop() ?? "repo";
-  return tail.replace(/\.git$/, "").replace(/[^a-zA-Z0-9._-]/g, "_") || "repo";
+  const cleaned = input.replace(/\.git$/, "");
+  // Try to extract owner + repo from common git-URL shapes:
+  //   https://github.com/owner/repo[/...]
+  //   git@github.com:owner/repo[.git]
+  //   ssh://git@host/owner/repo
+  const m =
+    cleaned.match(/^(?:https?|ssh|git):\/\/[^/]+\/([^/]+)\/([^/]+)/) ||
+    cleaned.match(/^git@[^:]+:([^/]+)\/([^/]+)/);
+  if (m) {
+    const [, owner, repo] = m;
+    return sanitize(`${owner}__${repo}`);
+  }
+  const tail = cleaned.replace(/[\/\\]+$/, "").split(/[\/\\]/).pop() ?? "repo";
+  return sanitize(tail);
+}
+
+function sanitize(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_") || "repo";
 }
 
 function expandPath(p: string): string {

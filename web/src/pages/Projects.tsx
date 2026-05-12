@@ -11,7 +11,9 @@ export function ProjectsPage() {
   });
 
   const [name, setName] = useState("");
-  const [reposText, setReposText] = useState("");
+  const [gitRows, setGitRows] = useState<Array<{ url: string; ref: string }>>([
+    { url: "", ref: "" },
+  ]);
   const [pathsText, setPathsText] = useState("");
   const [coder, setCoder] = useState<"claude-code" | "codex" | "kimi">(
     "claude-code"
@@ -21,16 +23,14 @@ export function ProjectsPage() {
 
   const create = useMutation({
     mutationFn: () => {
-      const gitRepos = reposText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((line) => {
-          const [url, ref] = line.split(/\s+/);
-          return ref
-            ? { url, ref, kind: "git" as const }
-            : { url, kind: "git" as const };
-        });
+      const gitRepos = gitRows
+        .map((r) => ({ url: r.url.trim(), ref: r.ref.trim() }))
+        .filter((r) => r.url)
+        .map((r) =>
+          r.ref
+            ? { url: r.url, ref: r.ref, kind: "git" as const }
+            : { url: r.url, kind: "git" as const }
+        );
       const localRepos = pathsText
         .split("\n")
         .map((s) => s.trim())
@@ -46,7 +46,7 @@ export function ProjectsPage() {
     },
     onSuccess: () => {
       setName("");
-      setReposText("");
+      setGitRows([{ url: "", ref: "" }]);
       setPathsText("");
       setMainFlowText("");
       setNotes("");
@@ -100,14 +100,60 @@ export function ProjectsPage() {
                 placeholder="my-product / e2e-flow"
               />
             </Field>
-            <Field label="Git repos (one per line, optional `<url> <ref>`)">
-              <textarea
-                value={reposText}
-                onChange={(e) => setReposText(e.target.value)}
-                className="input h-20 font-mono text-xs"
-                placeholder="https://github.com/owner/repo
-https://github.com/owner/other main"
-              />
+            <Field label="Git repos">
+              <div className="space-y-2">
+                {gitRows.map((row, i) => (
+                  <div key={i} className="flex gap-2">
+                    <input
+                      value={row.url}
+                      onChange={(e) =>
+                        setGitRows((rows) =>
+                          rows.map((r, j) =>
+                            j === i ? { ...r, url: e.target.value } : r
+                          )
+                        )
+                      }
+                      className="input flex-1 font-mono text-xs"
+                      placeholder="https://github.com/owner/repo"
+                    />
+                    <input
+                      value={row.ref}
+                      onChange={(e) =>
+                        setGitRows((rows) =>
+                          rows.map((r, j) =>
+                            j === i ? { ...r, ref: e.target.value } : r
+                          )
+                        )
+                      }
+                      className="input w-32 font-mono text-xs"
+                      placeholder="branch / tag / sha"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setGitRows((rows) =>
+                          rows.length === 1
+                            ? [{ url: "", ref: "" }]
+                            : rows.filter((_, j) => j !== i)
+                        )
+                      }
+                      className="text-xs text-zinc-500 hover:text-zinc-200 px-2"
+                      title="remove row"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setGitRows((rows) => [...rows, { url: "", ref: "" }])
+                  }
+                  className="text-xs text-zinc-400 hover:text-zinc-100"
+                >
+                  + add repo
+                </button>
+              </div>
             </Field>
             <Field label="Local folders (one path per line, no clone)">
               <textarea

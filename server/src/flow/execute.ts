@@ -283,11 +283,31 @@ export async function executeRun(runId: string): Promise<void> {
 }
 
 function projectCwd(project: Project): string {
-  // Prefer the first repo's local path. If no repos, fall back to the
-  // project dir so the agent at least has a stable cwd.
-  const r = project.repos.find((r) => r.localPath && r.status === "ok");
-  if (r?.localPath) return r.localPath;
-  return path.join(config.projectsDir, project.id);
+  const ok = project.repos.filter((r) => r.localPath && r.status === "ok");
+  if (ok.length === 0) return path.join(config.projectsDir, project.id);
+  if (ok.length === 1) return ok[0].localPath!;
+  // Multiple repos. If they're all under one common parent (the project's
+  // `repos/` dir for git clones, by construction), start the agent there
+  // so it can see every repo as a subdirectory. Otherwise fall back to the
+  // first one and let the agent navigate via absolute paths.
+  const common = commonParent(ok.map((r) => r.localPath!));
+  return common ?? ok[0].localPath!;
+}
+
+function commonParent(paths: string[]): string | null {
+  if (paths.length === 0) return null;
+  const split = paths.map((p) => path.resolve(p).split(path.sep));
+  const min = Math.min(...split.map((s) => s.length));
+  const out: string[] = [];
+  for (let i = 0; i < min; i++) {
+    const seg = split[0][i];
+    if (split.every((s) => s[i] === seg)) out.push(seg);
+    else break;
+  }
+  const joined = out.join(path.sep);
+  // Require at least 2 segments (e.g. "/foo") to avoid returning "/"
+  // when paths share nothing meaningful.
+  return out.length >= 2 ? joined : null;
 }
 
 function buildSystemPreamble(project: Project, flow: Flow): string {

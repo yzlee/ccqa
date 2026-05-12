@@ -1,7 +1,7 @@
 {
   "name": "ccqa",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "LLM-driven QA harness that drives Claude Code / Codex / Kimi to test git projects from a natural-language flow.",
   "license": "MIT",
   "author": "yzlee",

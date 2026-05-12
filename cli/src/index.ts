@@ -157,7 +157,7 @@ project
   .requiredOption("--name <name>", "project name")
   .option(
     "--repo <url...>",
-    "git repo URLs (optional `<url>#<ref>`); use --path for local dirs"
+    "git repo URLs; append a ref as `<url>#<ref>` or `<url> <ref>` (quote it); use --path for local dirs"
   )
   .option(
     "--path <dir...>",
@@ -173,7 +173,22 @@ project
   .option("--notes <text>", "free-form project notes")
   .action(async (opts) => {
     const gitRepos = (opts.repo ?? []).map((line: string) => {
-      const [url, ref] = line.split("#");
+      // Accept either `url#ref` or `url ref`. Pick whichever separator
+      // appears first so we don't trip on '#' inside a fragment-style
+      // URL (e.g. "ssh://...#fragment" isn't a real shape but be safe).
+      const trimmed = line.trim();
+      let url = trimmed;
+      let ref: string | undefined;
+      const hashAt = trimmed.indexOf("#");
+      const spaceAt = trimmed.search(/\s/);
+      const sep =
+        hashAt === -1 ? spaceAt :
+        spaceAt === -1 ? hashAt :
+        Math.min(hashAt, spaceAt);
+      if (sep !== -1) {
+        url = trimmed.slice(0, sep);
+        ref = trimmed.slice(sep + 1).trim() || undefined;
+      }
       return ref
         ? { url, ref, kind: "git" as const }
         : { url, kind: "git" as const };
